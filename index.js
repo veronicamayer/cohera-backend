@@ -9,7 +9,12 @@ import {
     verifyJWTToken,
     deleteCookie,
 } from "./middleware/authMiddleware.js";
-import { getAllShops } from "./controller/apiController.js";
+import {
+    getAllShops,
+    addFavorites,
+    getFavorites,
+    deleteFavorites,
+} from "./controller/apiController.js";
 import { getDb } from "./util/db.js";
 
 const BACKEND_PORT = process.env.BACKEND_PORT;
@@ -55,40 +60,11 @@ app.get("/logout", deleteCookie, (req, res) => {
 
 app.get("/api/allshops", getAllShops);
 
-app.put("/users/:email", async (req, res) => {
-    const userEmail = req.params.email;
-    const newFavorite = req.body.favorite;
+app.get("/favorites/:email", getFavorites);
 
-    const db = await getDb();
-    const result = await db
-        .collection("UserAuthentication")
-        .findOneAndUpdate(
-            { user: userEmail },
-            { $push: { favorites: newFavorite } },
-            function (err, result) {
-                if (err) {
-                    console.log("Error updating document:", err);
-                    res.status(500).send("Error updating document");
-                } else {
-                    console.log("Document updated successfully");
-                    res.status(200).send("Document updated successfully");
-                }
-            }
-        );
-});
+app.put("/favorites/:email", addFavorites);
 
-app.get("/favorites", async (req, res) => {
-    try {
-        const db = await getDb();
-        const result = await db
-            .collection("UserAuthentication")
-            .findOne({ user: "nocheintest@mail.de" });
-        res.json(result.favorites);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Server Error" });
-    }
-});
+app.delete("/favorites/:email", deleteFavorites);
 
 app.listen(BACKEND_PORT, () => {
     console.log(`Server läuft auf Port: ${BACKEND_PORT} `);

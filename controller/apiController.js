@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getDb } from "../util/db.js";
 
 export const getAllShops = async (req, res) => {
     const options = {
@@ -35,3 +36,53 @@ function shuffle(array) {
 
     return array;
 }
+
+export const getFavorites = async (req, res) => {
+    try {
+        const userEmail = req.params.email;
+        const db = await getDb();
+        const result = await db
+            .collection("UserAuthentication")
+            .findOne({ user: userEmail });
+        res.json(result.favorites);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server Error" });
+    }
+};
+
+export const addFavorites = async (req, res) => {
+    try {
+        const userEmail = req.params.email;
+        const newFavorite = req.body.favorite;
+        const db = await getDb();
+        const result = await db
+            .collection("UserAuthentication")
+            .findOneAndUpdate(
+                { user: userEmail },
+                { $push: { favorites: newFavorite } }
+            );
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server Error" });
+    }
+};
+
+export const deleteFavorites = async (req, res) => {
+    try {
+        const userEmail = req.params.email;
+        const selectedFavorite = req.body.favorite;
+        const db = await getDb();
+        const result = await db
+            .collection("UserAuthentication")
+            .findOneAndUpdate(
+                { user: userEmail },
+                { $pull: { favorites: selectedFavorite } }
+            );
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server Error" });
+    }
+};
